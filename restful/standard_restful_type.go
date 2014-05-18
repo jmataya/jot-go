@@ -45,35 +45,11 @@ func (StandardRestfulType) pathIsMatch(base string, actual string) bool {
 	return valueMatcher.MatchString(actual)
 }
 
-func (s StandardRestfulType) isCollectionMatch(path string) bool {
+func (s StandardRestfulType) IsCollectionMatch(path string) bool {
 	collectionPath := s.getCollectionPath()
 	return s.pathIsMatch(collectionPath, path)
 }
 
-func (s StandardRestfulType) isMemberMatch(path string) bool {
+func (s StandardRestfulType) IsMemberMatch(path string) bool {
 	return s.pathIsMatch(s.basePath, path)
-}
-
-func (s StandardRestfulType) ActionMatch(path string, method string) (bool, string) {
-	if s.isCollectionMatch(path) {
-		if method == GET {
-			return true, LIST
-		} else if method == POST {
-			return true, CREATE
-		} else {
-			return false, ""
-		}
-	} else if s.isMemberMatch(path) {
-		if method == GET {
-			return true, SHOW
-		} else if method == PUT {
-			return true, UPDATE
-		} else if method == DELETE {
-			return true, DESTROY
-		} else {
-			return false, ""
-		}
-	} else {
-		return false, ""
-	}
 }

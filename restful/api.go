@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 const (
@@ -22,11 +23,40 @@ func (api *API) Abort(rw http.ResponseWriter, statusCode int) {
 	rw.WriteHeader(statusCode)
 }
 
+func (API) methodNotFound(values url.Values) (int, interface{}) {
+	data := map[string]string{"error": "Method Not Found"}
+	return 404, data
+}
+
+func (api *API) matchAction(restfulType RestfulType, path string, method string) (bool, func(values url.Values) (int, interface{})) {
+	if restfulType.IsCollectionMatch(path) {
+		if method == GET {
+			return true, restfulType.List
+		} else if method == POST {
+			return true, restfulType.Create
+		} else {
+			return false, api.methodNotFound
+		}
+	} else if restfulType.IsMemberMatch(path) {
+		if method == GET {
+			return true, restfulType.Show
+		} else if method == PUT {
+			return true, restfulType.Update
+		} else if method == DELETE {
+			return true, restfulType.Destroy
+		} else {
+			return false, api.methodNotFound
+		}
+	} else {
+		return false, api.methodNotFound
+	}
+}
+
 func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 	actualPath := request.URL.Path
 	method := request.Method
 
-	success, action := api.registeredTypes["Note"].ActionMatch(actualPath, method)
+	success, action := api.matchAction(api.registeredTypes["Note"], actualPath, method)
 
 	if success {
 		parseError := request.ParseForm()
@@ -38,21 +68,7 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 			var data interface{}
 			values := request.Form
 
-			switch action {
-			case LIST:
-				statusCode, data = api.registeredTypes["Note"].List(values)
-			case SHOW:
-				statusCode, data = api.registeredTypes["Note"].Show(values)
-			case CREATE:
-				statusCode, data = api.registeredTypes["Note"].Create(values)
-			case UPDATE:
-				statusCode, data = api.registeredTypes["Note"].Update(values)
-			case DESTROY:
-				statusCode, data = api.registeredTypes["Note"].Destroy(values)
-			default:
-				api.Abort(rw, 405)
-				return
-			}
+			statusCode, data = action(values)
 
 			content, err := json.Marshal(data)
 			if err != nil {
@@ -73,29 +89,6 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 		rw.Write(content)
 	}
 }
-
-// func (api *API) requestHandler(resource Resource) http.HandlerFunc {
-// 	return func(rw http.ResponseWriter, request *http.Request) {
-// 		method := request.Method
-// 		var parseError = request.ParseForm()
-// 		if parseError != nil {
-// 			fmt.Fprintf(rw, "Error processing request %s", parseError)
-// 		} else {
-//
-// 			content, err := json.Marshal(data)
-// 			if err != nil {
-// 				api.Abort(rw, 500)
-// 				return
-// 			}
-// 			rw.WriteHeader(statusCode)
-// 			rw.Write(content)
-// 		}
-// 	}
-// }
-
-// func (api *API) AddResource(resource Resource, path string) {
-// 	http.HandleFunc(path, api.requestHandler(resource))
-// }
 
 func (api *API) RegisterRestfulType(name string, restfulType RestfulType) {
 	if api.registeredTypes == nil {

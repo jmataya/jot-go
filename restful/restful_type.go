@@ -18,7 +18,8 @@ type RestfulType interface {
 	Destroy(values url.Values) (int, interface{})
 	SetBasePath(path string)
 	GetBasePath() string
-	ActionMatch(path string, method string) (bool, string)
+	IsCollectionMatch(path string) bool
+	IsMemberMatch(path string) bool
 }
 
 type (
