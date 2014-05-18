@@ -6,34 +6,39 @@ import (
 	"github.com/jmataya/jot-go/restful"
 )
 
-type NoteResource struct {
-	restful.PostNotSupported
-	restful.PutNotSupported
-	restful.DeleteNotSupported
+type Notes struct {
+	restful.StandardRestfulType
 }
 
-func (NoteResource) Get(values url.Values) (int, interface{}) {
-	data := map[string]string{"hello": "world"}
+func (Notes) List(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "LIST for Notes"}
 	return 200, data
 }
 
-type GlobalResource struct {
-	restful.PostNotSupported
-	restful.PutNotSupported
-	restful.DeleteNotSupported
+func (Notes) Show(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "SHOW for Notes"}
+	return 200, data
 }
 
-func (GlobalResource) Get(values url.Values) (int, interface{}) {
-	data := map[string]string{"message": "always works"}
+func (Notes) Create(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "CREATE for Notes"}
+	return 200, data
+}
+
+func (Notes) Update(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "UPDATE for Notes"}
+	return 200, data
+}
+
+func (Notes) Destroy(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "DESTROY for Notes"}
 	return 200, data
 }
 
 func main() {
-	noteResource := new(NoteResource)
-	globalResource := new(GlobalResource)
-
+	notes := new(Notes)
+	notes.SetBasePath("/notes/{id}")
 	var api = new(restful.API)
-	api.AddResource(noteResource, "/notes")
-	api.AddResource(globalResource, "/")
+	api.RegisterRestfulType("Note", notes)
 	api.Start(3000)
 }
