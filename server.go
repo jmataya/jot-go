@@ -1,20 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"net/url"
+
+	"github.com/jmataya/jot/restful"
 )
 
-func main() {
-	http.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Thanks for the %s!", r.Method)
-	})
+type NoteResource struct {
+	restful.PostNotSupported
+	restful.PutNotSupported
+	restful.DeleteNotSupported
+}
 
-	var err = http.ListenAndServe(":3000", nil)
-	if err == nil {
-		log.Fatal("ListenAndServe: ", err)
-	} else {
-		fmt.Printf("Listening on 3000")
-	}
+func (NoteResource) Get(values url.Values) (int, interface{}) {
+	data := map[string]string{"hello": "world"}
+	return 200, data
+}
+
+func main() {
+	resource := new(NoteResource)
+
+	var api = new(restful.API)
+	api.AddResource(resource, "/notes")
+	api.Start(3000)
 }
