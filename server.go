@@ -17,10 +17,23 @@ func (NoteResource) Get(values url.Values) (int, interface{}) {
 	return 200, data
 }
 
+type GlobalResource struct {
+	restful.PostNotSupported
+	restful.PutNotSupported
+	restful.DeleteNotSupported
+}
+
+func (GlobalResource) Get(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "always works"}
+	return 200, data
+}
+
 func main() {
-	resource := new(NoteResource)
+	noteResource := new(NoteResource)
+	globalResource := new(GlobalResource)
 
 	var api = new(restful.API)
-	api.AddResource(resource, "/notes")
+	api.AddResource(noteResource, "/notes")
+	api.AddResource(globalResource, "/")
 	api.Start(3000)
 }
