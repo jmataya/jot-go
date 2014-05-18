@@ -3,7 +3,7 @@ package main
 import (
 	"net/url"
 
-	"github.com/jmataya/jot/restful"
+	"github.com/jmataya/jot-go/restful"
 )
 
 type NoteResource struct {
