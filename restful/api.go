@@ -56,38 +56,44 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 	actualPath := request.URL.Path
 	method := request.Method
 
-	success, action := api.matchAction(api.registeredTypes["Note"], actualPath, method)
+	var success bool
+	var action func(values url.Values) (int, interface{})
 
-	if success {
-		parseError := request.ParseForm()
-		if parseError != nil {
-			fmt.Fprintf(rw, "Error processing request %s", parseError)
-			return
-		} else {
-			var statusCode int
-			var data interface{}
-			values := request.Form
-
-			statusCode, data = action(values)
-
-			content, err := json.Marshal(data)
-			if err != nil {
+	for _, regType := range api.registeredTypes {
+		success, action = api.matchAction(regType, actualPath, method)
+		if success {
+			parseError := request.ParseForm()
+			if parseError != nil {
 				api.Abort(rw, 500)
 				return
-			}
+			} else {
+				var statusCode int
+				var data interface{}
+				values := request.Form
 
-			rw.WriteHeader(statusCode)
-			rw.Write(content)
+				statusCode, data = action(values)
+
+				content, err := json.Marshal(data)
+				if err != nil {
+					api.Abort(rw, 500)
+					return
+				}
+
+				rw.WriteHeader(statusCode)
+				rw.Write(content)
+				return
+			}
 		}
-	} else {
-		content, err := json.Marshal(map[string]string{"message": "Not found"})
-		if err != nil {
-			api.Abort(rw, 500)
-			return
-		}
-		rw.WriteHeader(200)
-		rw.Write(content)
 	}
+
+	// If we hit this point, the resource hasn't been found.
+	content, err := json.Marshal(map[string]string{"message": "Not found"})
+	if err != nil {
+		api.Abort(rw, 500)
+		return
+	}
+	rw.WriteHeader(404)
+	rw.Write(content)
 }
 
 func (api *API) RegisterRestfulType(name string, restfulType RestfulType) {

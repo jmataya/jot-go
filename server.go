@@ -35,10 +35,42 @@ func (Notes) Destroy(values url.Values) (int, interface{}) {
 	return 200, data
 }
 
+type Tasks struct {
+	restful.StandardRestfulType
+}
+
+func (Tasks) List(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "LIST for Tasks"}
+	return 200, data
+}
+
+func (Tasks) Show(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "SHOW for Tasks"}
+	return 200, data
+}
+
+func (Tasks) Create(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "CREATE for Tasks"}
+	return 200, data
+}
+
+func (Tasks) Update(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "UPDATE for Tasks"}
+	return 200, data
+}
+
+func (Tasks) Destroy(values url.Values) (int, interface{}) {
+	data := map[string]string{"message": "DESTROY for Tasks"}
+	return 200, data
+}
+
 func main() {
 	notes := new(Notes)
+	tasks := new(Tasks)
 	notes.SetBasePath("/notes/{id}")
+	tasks.SetBasePath("/tasks/{id}")
 	var api = new(restful.API)
 	api.RegisterRestfulType("Note", notes)
+	api.RegisterRestfulType("Task", tasks)
 	api.Start(3000)
 }
