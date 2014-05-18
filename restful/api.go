@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 )
 
 const (
@@ -28,8 +29,43 @@ func (API) methodNotFound(values url.Values) (int, interface{}) {
 	return 404, data
 }
 
-func (api *API) matchAction(restfulType RestfulType, path string, method string) (bool, func(values url.Values) (int, interface{})) {
-	if restfulType.IsCollectionMatch(path) {
+func (API) getCollectionPath(basePath string) string {
+	/*
+	 * This essentially works by looking at the base path and stripping off an
+	 * ID parameter if it exists on the end of the string.
+	 */
+	lastIdRegexStr := "{[a-zA-Z0-9_-]+}/?$"
+	lastIdRegexMatcher := regexp.MustCompile(lastIdRegexStr)
+	return lastIdRegexMatcher.ReplaceAllString(basePath, "")
+}
+
+func (API) pathIsMatch(base string, actual string) bool {
+	// First, interpolate the placeholders that are in for the strings.
+	keyMatcher := regexp.MustCompile("{[a-zA-Z0-9_-]+}")
+	interpolatedStr := keyMatcher.ReplaceAllString(base, "[a-zA-Z0-9_-]+")
+
+	// Second, clean up the string:
+	// 1. Make sure that the last "/" is optional
+	// 2. Make sure that nothing can come after this string.
+	slashRegexMatcher := regexp.MustCompile("/$")
+	interpolatedStr = slashRegexMatcher.ReplaceAllString(interpolatedStr, "")
+	interpolatedStr += "/?$"
+
+	// Finally, do the actual match
+	valueMatcher := regexp.MustCompile(interpolatedStr)
+	return valueMatcher.MatchString(actual)
+}
+
+func (api *API) IsCollectionMatch(resourcePath string, path string) bool {
+	collectionPath := api.getCollectionPath(resourcePath)
+	return api.pathIsMatch(collectionPath, path)
+}
+
+func (api *API) IsMemberMatch(resourcePath string, path string) bool {
+	return api.pathIsMatch(resourcePath, path)
+}
+func (api *API) matchAction(restfulType RestfulType, resourcePath string, path string, method string) (bool, func(values url.Values) (int, interface{})) {
+	if api.IsCollectionMatch(resourcePath, path) {
 		if method == GET {
 			return true, restfulType.List
 		} else if method == POST {
@@ -37,7 +73,7 @@ func (api *API) matchAction(restfulType RestfulType, path string, method string)
 		} else {
 			return false, api.methodNotFound
 		}
-	} else if restfulType.IsMemberMatch(path) {
+	} else if api.IsMemberMatch(resourcePath, path) {
 		if method == GET {
 			return true, restfulType.Show
 		} else if method == PUT {
@@ -59,8 +95,8 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 	var success bool
 	var action func(values url.Values) (int, interface{})
 
-	for _, regType := range api.registeredTypes {
-		success, action = api.matchAction(regType, actualPath, method)
+	for resourcePath, regType := range api.registeredTypes {
+		success, action = api.matchAction(regType, resourcePath, actualPath, method)
 		if success {
 			parseError := request.ParseForm()
 			if parseError != nil {
@@ -96,11 +132,11 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 	rw.Write(content)
 }
 
-func (api *API) RegisterRestfulType(name string, restfulType RestfulType) {
+func (api *API) RegisterRestfulType(basePath string, restfulType RestfulType) {
 	if api.registeredTypes == nil {
 		api.registeredTypes = map[string]RestfulType{}
 	}
-	api.registeredTypes[name] = restfulType
+	api.registeredTypes[basePath] = restfulType
 }
 
 func (api *API) Start(port int) {

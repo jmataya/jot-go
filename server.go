@@ -6,9 +6,7 @@ import (
 	"github.com/jmataya/jot-go/restful"
 )
 
-type Notes struct {
-	restful.StandardRestfulType
-}
+type Notes struct{}
 
 func (Notes) List(values url.Values) (int, interface{}) {
 	data := map[string]string{"message": "LIST for Notes"}
@@ -35,9 +33,7 @@ func (Notes) Destroy(values url.Values) (int, interface{}) {
 	return 200, data
 }
 
-type Tasks struct {
-	restful.StandardRestfulType
-}
+type Tasks struct{}
 
 func (Tasks) List(values url.Values) (int, interface{}) {
 	data := map[string]string{"message": "LIST for Tasks"}
@@ -67,10 +63,8 @@ func (Tasks) Destroy(values url.Values) (int, interface{}) {
 func main() {
 	notes := new(Notes)
 	tasks := new(Tasks)
-	notes.SetBasePath("/notes/{id}")
-	tasks.SetBasePath("/tasks/{id}")
 	var api = new(restful.API)
-	api.RegisterRestfulType("Note", notes)
-	api.RegisterRestfulType("Task", tasks)
+	api.RegisterRestfulType("/notes/{id}", notes)
+	api.RegisterRestfulType("/tasks/{id}", tasks)
 	api.Start(3000)
 }
