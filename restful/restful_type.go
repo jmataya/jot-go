@@ -11,11 +11,11 @@ const (
 )
 
 type RestfulType interface {
-	List(values url.Values) (int, interface{})
-	Show(values url.Values) (int, interface{})
-	Create(values url.Values) (int, interface{})
-	Update(values url.Values) (int, interface{})
-	Destroy(values url.Values) (int, interface{})
+	List(values url.Values, params map[string]string) (int, interface{})
+	Show(values url.Values, params map[string]string) (int, interface{})
+	Create(values url.Values, params map[string]string) (int, interface{})
+	Update(values url.Values, params map[string]string) (int, interface{})
+	Destroy(values url.Values, params map[string]string) (int, interface{})
 }
 
 type (
@@ -26,22 +26,22 @@ type (
 	DestroyNotSupported struct{}
 )
 
-func (ListNotSupported) List(values url.Values) (int, interface{}) {
+func (ListNotSupported) List(values url.Values, params map[string]string) (int, interface{}) {
 	return 405, nil
 }
 
-func (ShowNotSupported) Show(values url.Values) (int, interface{}) {
+func (ShowNotSupported) Show(values url.Values, params map[string]string) (int, interface{}) {
 	return 405, nil
 }
 
-func (CreateNotSupported) Create(values url.Values) (int, interface{}) {
+func (CreateNotSupported) Create(values url.Values, params map[string]string) (int, interface{}) {
 	return 405, nil
 }
 
-func (UpdateNotSupported) Update(values url.Values) (int, interface{}) {
+func (UpdateNotSupported) Update(values url.Values, params map[string]string) (int, interface{}) {
 	return 405, nil
 }
 
-func (DestroyNotSupported) Destroy(values url.Values) (int, interface{}) {
+func (DestroyNotSupported) Destroy(values url.Values, params map[string]string) (int, interface{}) {
 	return 405, nil
 }

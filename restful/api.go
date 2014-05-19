@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -24,7 +25,7 @@ func (api *API) Abort(rw http.ResponseWriter, statusCode int) {
 	rw.WriteHeader(statusCode)
 }
 
-func (API) methodNotFound(values url.Values) (int, interface{}) {
+func (API) methodNotFound(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"error": "Method Not Found"}
 	return 404, data
 }
@@ -56,6 +57,30 @@ func (API) pathIsMatch(base string, actual string) bool {
 	return valueMatcher.MatchString(actual)
 }
 
+func (API) getPathParams(basePath string, actualPath string) map[string]string {
+	// First break each path into its individual pieces.
+	basePieces := strings.Split(basePath, "/")
+	actualPieces := strings.Split(actualPath, "/")
+
+	if len(basePieces) != len(actualPieces) {
+		return map[string]string{"error": "base and actual paths do not match"}
+	}
+
+	keyRegexString := "{[a-zA-Z0-9_-]+}"
+	keyRegexMatcher := regexp.MustCompile(keyRegexString)
+	params := map[string]string{}
+
+	for i := 0; i < len(basePieces); i++ {
+		if keyRegexMatcher.MatchString(basePieces[i]) {
+			key := strings.Trim(basePieces[i], " {}")
+			value := strings.Trim(actualPieces[i], " ")
+			params[key] = value
+		}
+	}
+
+	return params
+}
+
 func (api *API) IsCollectionMatch(resourcePath string, path string) bool {
 	collectionPath := api.getCollectionPath(resourcePath)
 	return api.pathIsMatch(collectionPath, path)
@@ -64,7 +89,7 @@ func (api *API) IsCollectionMatch(resourcePath string, path string) bool {
 func (api *API) IsMemberMatch(resourcePath string, path string) bool {
 	return api.pathIsMatch(resourcePath, path)
 }
-func (api *API) matchAction(restfulType RestfulType, resourcePath string, path string, method string) (bool, func(values url.Values) (int, interface{})) {
+func (api *API) matchAction(restfulType RestfulType, resourcePath string, path string, method string) (bool, func(values url.Values, params map[string]string) (int, interface{})) {
 	if api.IsCollectionMatch(resourcePath, path) {
 		if method == GET {
 			return true, restfulType.List
@@ -93,7 +118,7 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 	method := request.Method
 
 	var success bool
-	var action func(values url.Values) (int, interface{})
+	var action func(values url.Values, params map[string]string) (int, interface{})
 
 	for resourcePath, regType := range api.registeredTypes {
 		success, action = api.matchAction(regType, resourcePath, actualPath, method)
@@ -106,8 +131,9 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 				var statusCode int
 				var data interface{}
 				values := request.Form
+				params := api.getPathParams(resourcePath, actualPath)
 
-				statusCode, data = action(values)
+				statusCode, data = action(values, params)
 
 				content, err := json.Marshal(data)
 				if err != nil {

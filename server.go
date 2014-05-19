@@ -8,54 +8,54 @@ import (
 
 type Notes struct{}
 
-func (Notes) List(values url.Values) (int, interface{}) {
+func (Notes) List(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "LIST for Notes"}
 	return 200, data
 }
 
-func (Notes) Show(values url.Values) (int, interface{}) {
+func (Notes) Show(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "SHOW for Notes"}
 	return 200, data
 }
 
-func (Notes) Create(values url.Values) (int, interface{}) {
+func (Notes) Create(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "CREATE for Notes"}
 	return 200, data
 }
 
-func (Notes) Update(values url.Values) (int, interface{}) {
+func (Notes) Update(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "UPDATE for Notes"}
 	return 200, data
 }
 
-func (Notes) Destroy(values url.Values) (int, interface{}) {
+func (Notes) Destroy(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "DESTROY for Notes"}
 	return 200, data
 }
 
 type Tasks struct{}
 
-func (Tasks) List(values url.Values) (int, interface{}) {
+func (Tasks) List(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "LIST for Tasks"}
 	return 200, data
 }
 
-func (Tasks) Show(values url.Values) (int, interface{}) {
-	data := map[string]string{"message": "SHOW for Tasks"}
+func (Tasks) Show(values url.Values, params map[string]string) (int, interface{}) {
+	data := map[string]string{"id": params["id"]}
 	return 200, data
 }
 
-func (Tasks) Create(values url.Values) (int, interface{}) {
+func (Tasks) Create(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "CREATE for Tasks"}
 	return 200, data
 }
 
-func (Tasks) Update(values url.Values) (int, interface{}) {
+func (Tasks) Update(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "UPDATE for Tasks"}
 	return 200, data
 }
 
-func (Tasks) Destroy(values url.Values) (int, interface{}) {
+func (Tasks) Destroy(values url.Values, params map[string]string) (int, interface{}) {
 	data := map[string]string{"message": "DESTROY for Tasks"}
 	return 200, data
 }
