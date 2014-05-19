@@ -18,7 +18,7 @@ const (
 )
 
 type API struct {
-	registeredTypes map[string]RestfulType
+	registeredTypes map[string]RestfulController
 }
 
 func (api *API) Abort(rw http.ResponseWriter, statusCode int) {
@@ -89,7 +89,7 @@ func (api *API) IsCollectionMatch(resourcePath string, path string) bool {
 func (api *API) IsMemberMatch(resourcePath string, path string) bool {
 	return api.pathIsMatch(resourcePath, path)
 }
-func (api *API) matchAction(restfulType RestfulType, resourcePath string, path string, method string) (bool, func(values url.Values, params map[string]string) (int, interface{})) {
+func (api *API) matchAction(restfulType RestfulController, resourcePath string, path string, method string) (bool, func(values url.Values, params map[string]string) (int, interface{})) {
 	if api.IsCollectionMatch(resourcePath, path) {
 		if method == GET {
 			return true, restfulType.List
@@ -158,9 +158,9 @@ func (api *API) handleRequest(rw http.ResponseWriter, request *http.Request) {
 	rw.Write(content)
 }
 
-func (api *API) RegisterRestfulType(basePath string, restfulType RestfulType) {
+func (api *API) RegisterRestfulController(basePath string, restfulType RestfulController) {
 	if api.registeredTypes == nil {
-		api.registeredTypes = map[string]RestfulType{}
+		api.registeredTypes = map[string]RestfulController{}
 	}
 	api.registeredTypes[basePath] = restfulType
 }

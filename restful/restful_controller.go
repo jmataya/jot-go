@@ -10,7 +10,7 @@ const (
 	DESTROY = "DESTROY"
 )
 
-type RestfulType interface {
+type RestfulController interface {
 	List(values url.Values, params map[string]string) (int, interface{})
 	Show(values url.Values, params map[string]string) (int, interface{})
 	Create(values url.Values, params map[string]string) (int, interface{})
